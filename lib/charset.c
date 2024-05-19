@@ -5,7 +5,6 @@
  *  Copyright (c) 2017 Rob Clark
  */
 
-#include <common.h>
 #include <charset.h>
 #include <capitalization.h>
 #include <cp437.h>
@@ -351,6 +350,32 @@ s32 utf_to_upper(const s32 code)
 }
 
 /*
+ * u16_strcasecmp() - compare two u16 strings case insensitively
+ *
+ * @s1:		first string to compare
+ * @s2:		second string to compare
+ * @n:		maximum number of u16 to compare
+ * Return:	0  if the first n u16 are the same in s1 and s2
+ *		< 0 if the first different u16 in s1 is less than the
+ *		corresponding u16 in s2
+ *		> 0 if the first different u16 in s1 is greater than the
+ */
+int u16_strcasecmp(const u16 *s1, const u16 *s2)
+{
+	int ret = 0;
+	s32 c1, c2;
+
+	for (;;) {
+		c1 = utf_to_upper(utf16_get(&s1));
+		c2 = utf_to_upper(utf16_get(&s2));
+		ret = c1 - c2;
+		if (ret || !c1 || c1 == -1 || c2 == -1)
+			break;
+	}
+	return ret;
+}
+
+/*
  * u16_strncmp() - compare two u16 string
  *
  * @s1:		first string to compare
@@ -418,14 +443,14 @@ u16 *u16_strdup(const void *src)
 
 size_t u16_strlcat(u16 *dest, const u16 *src, size_t count)
 {
-	size_t destlen = u16_strlen(dest);
+	size_t destlen = u16_strnlen(dest, count);
 	size_t srclen = u16_strlen(src);
-	size_t ret = destlen + srclen + 1;
+	size_t ret = destlen + srclen;
 
 	if (destlen >= count)
 		return ret;
-	if (ret > count)
-		srclen -= ret - count;
+	if (ret >= count)
+		srclen -= (ret - count + 1);
 	memcpy(&dest[destlen], src, 2 * srclen);
 	dest[destlen + srclen] = 0x0000;
 
@@ -545,6 +570,10 @@ int utf8_to_utf32_stream(u8 c, char *buffer)
 		}
 		if (pos == end)
 			return 0;
+		/*
+		 * Appending the byte lead to an invalid UTF-8 byte sequence.
+		 * Consider it as the start of a new code sequence.
+		 */
 		*buffer = 0;
 	}
 }

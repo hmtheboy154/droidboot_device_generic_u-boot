@@ -22,13 +22,14 @@ allows this script to be run stand-alone, e.g.:
 
 from setuptools import setup, Extension
 from setuptools.command.build_py import build_py as _build_py
-from setuptools.extern.packaging import version
 import os
 import re
 import sys
 
-# Disable version normalization
-version.Version = version.LegacyVersion
+try:
+    from setuptools import sic
+except ImportError:
+    pass
 
 srcdir = os.path.dirname(__file__)
 
@@ -36,7 +37,7 @@ with open(os.path.join(srcdir, "../README"), "r") as fh:
     long_description = fh.read()
 
 # Decodes a Makefile assignment line into key and value (and plus for +=)
-RE_KEY_VALUE = re.compile('(?P<key>\w+) *(?P<plus>[+])?= *(?P<value>.*)$')
+RE_KEY_VALUE = re.compile(r'(?P<key>\w+) *(?P<plus>[+])?= *(?P<value>.*)$')
 
 def get_top_builddir():
     if '--top-builddir' in sys.argv:
@@ -117,7 +118,10 @@ progname = sys.argv[0]
 files = os.environ.get('SOURCES', '').split()
 cflags = os.environ.get('CPPFLAGS', '').split()
 objdir = os.environ.get('OBJDIR')
-version = os.environ.get('VERSION')
+try:
+    version = sic(os.environ.get('VERSION'))
+except:
+    version = os.environ.get('VERSION')
 swig_opts = os.environ.get('SWIG_OPTS', '').split()
 
 # If we were called directly rather than through our Makefile (which is often
