@@ -172,6 +172,7 @@ config VPL_SPRINTF
 
 config SSCANF
 	bool
+	default y
 
 config STRTO
 	bool
