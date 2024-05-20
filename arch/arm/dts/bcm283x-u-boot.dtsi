@@ -29,20 +29,3 @@
 	skip-init;
 	bootph-all;
 };
-
-&uart1 {
-	skip-init;
-	bootph-all;
-};
-
-&gpio {
-	bootph-all;
-};
-
-&uart0_gpio14 {
-	bootph-all;
-};
-
-&uart1_gpio14 {
-	bootph-all;
-};
